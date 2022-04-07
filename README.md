@@ -1,24 +1,2 @@
-# psd
+# psd.js 오픈소스 사용하여 psd 파일 레이어 별로 분리 후 이미지 파일 dom에 표출하기
 
-## Project setup
-```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
