@@ -80,7 +80,7 @@ const parsePsd = (psd, index) => {
           //if(mask[i+1]===undefined)console.error("No next character!");
           if (elem < 128) {
             // 128?
-            ModeRAW = +elem + 1; //Enable modeRAW to elem+1
+            ModeRAW = +elem + 1; //Enable modeRAW to elem+1asdas
           } else {
             var Repeat = 257 - elem; //257
             var Color = mask[i + 1];
