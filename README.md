@@ -7,5 +7,9 @@
 ###CSS에서 직접 canvas tag 를 바꿔 주면 넓이 지정 가능
 
 # 의문점 <br/>
-### 왜 layer data or image data 가 아닌 mask data를 쓰는가
-### 만약 포토샵프로그램에서 maskdata를 차단한다면 image를 가져다 쓸 수 없는가 ..
+### 왜 layer data or image data 가 아닌 mask data를 쓰는가 (해결)
+### 만약 포토샵프로그램에서 maskdata를 차단한다면 image를 가져다 쓸 수 없는가 .. (해결 ) 
+
+# psd.js <br/>
+###레이어 데이터 추출 <br/>
+###추출한 데이터 바탕으로 사이즈 조절 및 레이어 별 이미지 표출<br/>
