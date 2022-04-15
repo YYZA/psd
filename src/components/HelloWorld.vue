@@ -1,11 +1,14 @@
 <template>
-  <input id="input" type="file" />
-  <div id="psd">
-    <div id="list" v-for="(item, index) in test" :key="index">
-      <p @click="ggggg(index)">{{ item.name }}</p>
+  <div id="container">
+    <div id="positon"></div>
+    <input id="input" type="file" />
+    <div id="psd">
+      <div id="list" v-for="(item, index) in test" :key="index">
+        <input @click="ggggg(index)" id="ck" type="checkbox" />
+        <p>{{ item.name }}</p>
+      </div>
     </div>
   </div>
-  <div id="positon"></div>
 </template>
 
 <script setup>
@@ -32,23 +35,31 @@ onMounted(() => {
 
 const ggggg = (index) => {
   const test2 = document.querySelector("#positon");
+  const ck = document.querySelectorAll("#ck");
   var newC = document.createElement("img");
-  const rand1 = Math.random();
+  if (ck[index].checked) {
+    ck[index].checked = true;
+    newC.id = "L" + index;
+    console.log(test.value[index].layer);
+    const width = test.value[index].layer.image._width;
+    const height = test.value[index].layer.image._height;
+    newC.src = test.value[index].layer.image.toPng().src;
+    // console.log(test.value[index].layer.image.toPng().src);
+    test2.appendChild(newC);
+    newC.style.width = `${(width * 10) / 100}px`;
+    newC.style.height = `${(height * 10) / 100}px`;
+    newC.style.position = "absolute";
+    newC.style.top = `${(test.value[index].coords.top * 10) / 100}px`;
+    newC.style.left = `${(test.value[index].coords.left * 10) / 100}px`;
+    newC.style.right = `${(test.value[index].coords.right * 10) / 100}px`;
+    newC.style.bottom = `${(test.value[index].coords.bottom * 10) / 100}px`;
+  } else if (!ck[index].checked) {
+    ck[index].checked = false;
+    const testtt = document.querySelector(`${"#L" + index}`);
+    testtt.remove();
+  }
+
   // console.log(newC);
-  newC.id = "L" + rand1;
-  console.log(test.value[index].layer);
-  const width = test.value[index].layer.image._width;
-  const height = test.value[index].layer.image._height;
-  newC.src = test.value[index].layer.image.toPng().src;
-  // console.log(test.value[index].layer.image.toPng().src);
-  test2.appendChild(newC);
-  newC.style.width = `${(width * 10) / 100}px`;
-  newC.style.height = `${(height * 10) / 100}px`;
-  newC.style.position = "absolute";
-  newC.style.top = `${(test.value[index].coords.top * 10) / 100}px`;
-  newC.style.left = `${(test.value[index].coords.left * 10) / 100}px`;
-  newC.style.right = `${(test.value[index].coords.right * 10) / 100}px`;
-  newC.style.bottom = `${(test.value[index].coords.bottom * 10) / 100}px`;
 };
 </script>
 <style scoped>
@@ -57,6 +68,7 @@ const ggggg = (index) => {
   position: relative;
   width: 555.1px;
   height: 295.3px;
+  margin: auto;
 }
 </style>
 <!-- Add "scoped" attribute to limit CSS to this componenasdt onasdsdaly -->
