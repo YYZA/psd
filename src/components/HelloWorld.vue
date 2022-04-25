@@ -5,6 +5,7 @@
     <div class="dropBox">
       <h1 class="title">Drop File</h1>
     </div>
+
     <div id="positon"></div>
     <div id="psd">
       <div id="list" v-for="(item, index) in test" :key="index">
@@ -17,24 +18,37 @@
         <p>{{ item.name }}</p>
       </div>
     </div>
+    <div
+      id="dochi_context_menu"
+      class="custom-context-menu"
+      style="display: none"
+    >
+      <ul>
+        <li id="drag"><a>drag & drop</a></li>
+        <li id="scale"><a>Scale</a></li>
+        <li id="rotate"><a>Rotate</a></li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script setup>
 import PSD from "psd.js/dist/psd.min";
 import { onMounted, ref } from "vue";
+import interact from "interactjs";
 
 const psd_file = ref(null);
 const test = ref(null);
 const cur_img = ref(null);
-const coordX = ref(null);
-const coordY = ref(null);
+// const coordX = ref(null);
+// const coordY = ref(null);
 const box = ref(null);
 // const openWin = window.open("/blank", "openWin");
 
 onMounted(() => {
   const drop = document.querySelector(".dropBox");
   const title = document.querySelector(".dropBox h1");
+
   document.oncontextmenu = (e) => {
     e.preventDefault();
   };
@@ -46,7 +60,6 @@ onMounted(() => {
     psd_file.value = files[0];
     title.innerHTML = files.map((file) => file.name).join("<br>");
   };
-
   // ondragover 이벤트가 없으면 onDrop 이벤트가 실핻되지 않습니다.
   drop.ondragover = (e) => {
     e.preventDefault();
@@ -58,7 +71,9 @@ const input = () => {
   const el = document.querySelector(".ratio");
   const ck = document.querySelectorAll("#ck");
   var val = el.value;
-
+  if (box.value) {
+    box.value.close("/blank", "openWin");
+  }
   val < 1 || val > 3200
     ? alert("1~3200 범위로 입력해 주십시오.") && (el.value = "")
     : null;
@@ -69,17 +84,13 @@ const input = () => {
   });
 
   PSD.fromDroppedFile(psd_file.value).then(function (psd) {
-    console.log("dasda");
+    const test2 = document.querySelector("#positon");
+    console.log(el.value);
     test.value = psd.tree().descendants().reverse();
-    box.value = window.open(
-      "/blank",
-      "openWin",
-      `width=${(psd.image.width() * el.value) / 100}, height=${
-        (psd.image.height() * el.value) / 100
-      }`
-    );
-    // test2.style.width = `${(psd.image.width() * el.value) / 100}px`;
-    // test2.style.height = `${(psd.image.height() * el.value) / 100}px`;
+    const width = `${(psd.image.width() * el.value) / 100}px`;
+    const height = `${(psd.image.height() * el.value) / 100}px`;
+    test2.style.width = width;
+    test2.style.height = height;
   });
   Array.from(ck).map((p, idx) => {
     p.checked ? image_use(test.value[idx].layer, idx) : null;
@@ -99,19 +110,26 @@ const input = () => {
 const image_use = (file, index) => {
   setTimeout(() => {
     const ck = document.querySelectorAll("#ck");
-    const test2 = box.value.document.querySelector("#blank_box");
-    var newC = document.createElement("div");
+    const test2 = document.querySelector("#positon");
+    var newC = document.createElement("img");
+
     const el = document.querySelector(".ratio");
-    const drag = box.value.document.querySelector("#drag");
-    const vaaa = box.value.document.querySelector(`${"#L" + index}`);
+    const drag = document.querySelector("#drag");
+    const scale = document.querySelector("#scale");
+    const rotate = document.querySelector("#rotate");
+
+    const vaaa = document.querySelector(`${"#L" + index}`);
     if (!vaaa && ck[index].checked) {
       ck[index].checked = true;
       newC.id = "L" + index;
+
       const width = file.image._width;
       const height = file.image._height;
-      newC.style.background = `url(${file.image.toPng().src})`;
+      // newC.style.background = `url(${file.image.toPng().src})`;
       newC.style.backgroundSize = "cover";
-      // newC.src = file.image.toPng().src;cur_img.value
+      newC.src = file.image.toPng().src;
+
+      cur_img.value;
       // console.log(file.image.toPng().src);
       test2.appendChild(newC);
 
@@ -124,13 +142,13 @@ const image_use = (file, index) => {
       newC
         ? (newC.oncontextmenu = (e) => {
             if (cur_img.value !== null) {
-              cur_img.value.style.cursor = "auto";
+              interact(cur_img.value).unset();
+              // cur_img.value.style.cursor = "auto";
               cur_img.value.style.border = "";
               cur_img.value.draggable = false;
             }
-
             cur_img.value = e.target;
-            var div2 = box.value.document.getElementById("dochi_context_menu");
+            var div2 = document.getElementById("dochi_context_menu");
             e.preventDefault();
             var x = e.pageX + "px"; // 현재 마우스의 X좌표
             var y = e.pageY + "px"; // 현재 마우스의 Y좌
@@ -138,49 +156,119 @@ const image_use = (file, index) => {
             div2.style.left = x;
             div2.style.top = y;
             div2.style.zIndex = 9999;
-            box.value.document.addEventListener("click", () => {
+            document.addEventListener("click", () => {
               div2.style.display = "none";
             });
             drag.onclick = () => {
+              interact(cur_img.value).draggable({
+                onmove: dragMoveListener,
+              });
+              function dragMoveListener(event) {
+                var target = event.target,
+                  // keep the dragged position in the data-x/data-y attributes
+                  x =
+                    (parseFloat(target.getAttribute("data-x")) || 0) + event.dx,
+                  y =
+                    (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+
+                // translate the element
+                target.style.webkitTransform = target.style.transform =
+                  "translate(" + x + "px, " + y + "px)";
+
+                // update the posiion attributes
+                target.setAttribute("data-x", x);
+                target.setAttribute("data-y", y);
+              }
               cur_img.value.style.border = "2px dashed black";
-              cur_img.value.style.cursor = "grab";
+              // cur_img.value.style.cursor = "grab";
               cur_img.value.style.zIndex = "9999";
               cur_img.value.draggable = true;
             };
-            test2.ondragover = (e) => {
-              e.preventDefault();
-              coordX.value = e.offsetX;
-              coordY.value = e.offsetY;
-            };
+            scale.onclick = () => {
+              // console.log(box.value.document.querySelector("#L8"));
+              cur_img.value.style.border = "2px dashed black";
+              cur_img.value.style.zIndex = "9999";
+              interact(cur_img.value)
+                .resizable({
+                  preserveAspectRatio: false,
+                  edges: {
+                    left: true,
+                    right: true,
+                    bottom: true,
+                    top: true,
+                  },
+                })
+                .on("resizestart", function (event) {
+                  console.info("resizestart = ", event);
+                })
+                .on("resizemove", function (event) {
+                  console.info("resizemove = ", event);
+                  console.log(event.target);
+                  var target = event.target,
+                    x = parseFloat(target.getAttribute("data-x")) || 0,
+                    y = parseFloat(target.getAttribute("data-y")) || 0;
 
-            cur_img.value.ondragend = (e) => {
-              if (test2.style.width === cur_img.value.style.width) {
-                cur_img.value.style.zIndex = `${index + 10}`;
-              } else if (test2.style.width !== cur_img.value.style.width) {
-                cur_img.value.style.zIndex = `${index + 100}`;
+                  // update the element's style
+                  target.style.width = event.rect.width + "px";
+                  target.style.height = event.rect.height + "px";
+
+                  // translate when resizing from top or left edges
+                  x += event.deltaRect.left;
+                  y += event.deltaRect.top;
+
+                  target.style.webkitTransform = target.style.transform =
+                    "translate(" + x + "px," + y + "px)";
+
+                  target.setAttribute("data-x", x);
+                  target.setAttribute("data-y", y);
+                });
+            };
+            rotate.onclick = () => {
+              cur_img.value.style.border = "2px dashed black";
+              interact(cur_img.value).draggable({
+                onstart: function (event) {
+                  const element = event.target;
+                  const rect = element.getBoundingClientRect();
+
+                  // store the center as the element has css `transform-origin: center center`
+                  element.dataset.centerX = rect.left + rect.width / 2;
+                  element.dataset.centerY = rect.top + rect.height / 2;
+                  // get the angle of the element when the drag starts
+                  element.dataset.angle = getDragAngle(event);
+                },
+                onmove: function (event) {
+                  var element = event.target;
+                  // var center = {
+                  //   x: parseFloat(element.dataset.centerX) || 0,
+                  //   y: parseFloat(element.dataset.centerY) || 0,
+                  // };
+                  var angle = getDragAngle(event);
+
+                  // update transform style on dragmove
+                  element.style.transform = "rotate(" + angle + "rad" + ")";
+                },
+                onend: function (event) {
+                  const element = event.target;
+
+                  // save the angle on dragend
+                  element.dataset.angle = getDragAngle(event);
+                },
+              });
+
+              function getDragAngle(event) {
+                var element = event.target;
+                var startAngle = parseFloat(element.dataset.angle) || 0;
+                var center = {
+                  x: parseFloat(element.dataset.centerX) || 0,
+                  y: parseFloat(element.dataset.centerY) || 0,
+                };
+                var angle = Math.atan2(
+                  center.y - event.clientY,
+                  center.x - event.clientX
+                );
+
+                return angle - startAngle;
               }
-              setTimeout(() => {
-                cur_img.value.style.top = `${
-                  // coordY.value -
-                  e.clientY -
-                  cur_img.value.style.height
-                    .split("")
-                    .filter((element) => element !== "p")
-                    .filter((element) => element !== "x")
-                    .join("") *
-                    0.5
-                }px`;
-                cur_img.value.style.left = `${
-                  // coordX.value -
-                  e.clientX -
-                  cur_img.value.style.width
-                    .split("")
-                    .filter((element) => element !== "p")
-                    .filter((element) => element !== "x")
-                    .join("") *
-                    0.5
-                }px`;
-              }, 200);
             };
           })
         : null;
@@ -194,7 +282,6 @@ const image_use = (file, index) => {
     } else if (vaaa && !ck[index].checked) {
       ck[index].checked = false;
       const del_ele = box.value.document.getElementById(`${"L" + index}`);
-      console.log(del_ele);
       del_ele.remove();
     }
   }, 500);
@@ -209,7 +296,29 @@ const image_use = (file, index) => {
   position: relative;
   margin: auto;
 }
+.custom-context-menu {
+  position: absolute;
+  box-sizing: border-box;
+  min-height: 100px;
+  min-width: 200px;
+  background-color: #ffffff;
+  box-shadow: 0 0 1px 2px lightgrey;
+}
 
+.custom-context-menu ul {
+  list-style: none;
+  padding: 0;
+  background-color: transparent;
+}
+
+.custom-context-menu li {
+  padding: 3px 5px;
+  cursor: pointer;
+}
+
+.custom-context-menu li:hover {
+  background-color: #f0f0f0;
+}
 .dropBox {
   margin: 0 auto;
   display: flex;
