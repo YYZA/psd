@@ -40,8 +40,8 @@ import interact from "interactjs";
 const psd_file = ref(null);
 const test = ref(null);
 const cur_img = ref(null);
-// const coordX = ref(null);
-// const coordY = ref(null);
+const coord = ref(null);
+const coord_drag = ref(null);
 const box = ref(null);
 // const openWin = window.open("/blank", "openWin");
 
@@ -160,6 +160,10 @@ const image_use = (file, index) => {
               div2.style.display = "none";
             });
             drag.onclick = () => {
+              cur_img.value.style.border = "2px dashed black";
+              // cur_img.value.style.cursor = "grab";
+              cur_img.value.style.zIndex = "9999";
+              cur_img.value.draggable = true;
               interact(cur_img.value).draggable({
                 onmove: dragMoveListener,
               });
@@ -172,17 +176,18 @@ const image_use = (file, index) => {
                     (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
 
                 // translate the element
-                target.style.webkitTransform = target.style.transform =
-                  "translate(" + x + "px, " + y + "px)";
+                coord_drag.value = "translate(" + x + "px, " + y + "px)";
+                coord.value !== null
+                  ? (target.style.webkitTransform = target.style.transform =
+                      "translate(" + x + "px, " + y + "px)" + `${coord.value}`)
+                  : (target.style.webkitTransform = target.style.transform =
+                      "translate(" + x + "px, " + y + "px)");
 
                 // update the posiion attributes
                 target.setAttribute("data-x", x);
                 target.setAttribute("data-y", y);
+                z_index();
               }
-              cur_img.value.style.border = "2px dashed black";
-              // cur_img.value.style.cursor = "grab";
-              cur_img.value.style.zIndex = "9999";
-              cur_img.value.draggable = true;
             };
             scale.onclick = () => {
               // console.log(box.value.document.querySelector("#L8"));
@@ -203,7 +208,7 @@ const image_use = (file, index) => {
                 })
                 .on("resizemove", function (event) {
                   console.info("resizemove = ", event);
-                  console.log(event.target);
+
                   var target = event.target,
                     x = parseFloat(target.getAttribute("data-x")) || 0,
                     y = parseFloat(target.getAttribute("data-y")) || 0;
@@ -216,11 +221,20 @@ const image_use = (file, index) => {
                   x += event.deltaRect.left;
                   y += event.deltaRect.top;
 
-                  target.style.webkitTransform = target.style.transform =
-                    "translate(" + x + "px," + y + "px)";
+                  coord.value !== null
+                    ? (target.style.webkitTransform = target.style.transform =
+                        "translate(" +
+                        x +
+                        "px, " +
+                        y +
+                        "px)" +
+                        `${coord.value}`)
+                    : (target.style.webkitTransform = target.style.transform =
+                        "translate(" + x + "px, " + y + "px)");
 
                   target.setAttribute("data-x", x);
                   target.setAttribute("data-y", y);
+                  z_index();
                 });
             };
             rotate.onclick = () => {
@@ -228,6 +242,7 @@ const image_use = (file, index) => {
               interact(cur_img.value).draggable({
                 onstart: function (event) {
                   const element = event.target;
+                  console.log("로테이트 ::", element);
                   const rect = element.getBoundingClientRect();
 
                   // store the center as the element has css `transform-origin: center center`
@@ -238,17 +253,23 @@ const image_use = (file, index) => {
                 },
                 onmove: function (event) {
                   var element = event.target;
-                  // var center = {
-                  //   x: parseFloat(element.dataset.centerX) || 0,
-                  //   y: parseFloat(element.dataset.centerY) || 0,
-                  // };
+
+                  // (x = parseFloat(element.getAttribute("data-x")) || 0),
+                  // (y = parseFloat(element.getAttribute("data-y")) || 0);
+
                   var angle = getDragAngle(event);
 
                   // update transform style on dragmove
-                  element.style.transform = "rotate(" + angle + "rad" + ")";
+                  coord.value = "rotate(" + angle + "rad" + ") ";
+                  coord_drag.value !== null
+                    ? (element.style.webkitTransform = element.style.transform =
+                        `${coord_drag.value}` + "rotate(" + angle + "rad" + ")")
+                    : (element.style.webkitTransform = element.style.transform =
+                        "rotate(" + angle + "rad" + ")");
                 },
                 onend: function (event) {
                   const element = event.target;
+                  z_index();
 
                   // save the angle on dragend
                   element.dataset.angle = getDragAngle(event);
@@ -262,16 +283,27 @@ const image_use = (file, index) => {
                   x: parseFloat(element.dataset.centerX) || 0,
                   y: parseFloat(element.dataset.centerY) || 0,
                 };
+
                 var angle = Math.atan2(
                   center.y - event.clientY,
                   center.x - event.clientX
                 );
-
+                console.log(element.dataset);
                 return angle - startAngle;
               }
             };
           })
         : null;
+
+      const z_index = () => {
+        if (test2 !== null) {
+          if (test2.style.width === cur_img.value.style.width) {
+            cur_img.value.style.zIndex = `${index + 10}`;
+          } else if (test2.style.width !== cur_img.value.style.width) {
+            cur_img.value.style.zIndex = `${index + 100}`;
+          }
+        }
+      };
       if (test2 !== null) {
         if (test2.style.width === newC.style.width) {
           newC.style.zIndex = `${index + 1}`;
